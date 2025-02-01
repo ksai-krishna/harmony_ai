@@ -222,7 +222,7 @@ def harmonyai():
             say(f"Googling about {search_query}")
             url = f"https://www.google.com/search?q={search_query}"
             webbrowser.open(url)
-            say(get_google_description(search_query))
+            say(get_wikipedia_summary(search_query))
 
         elif "unmute".lower() in query.lower() or "un mute".lower() in query.lower():
             devices = AudioUtilities.GetSpeakers()
