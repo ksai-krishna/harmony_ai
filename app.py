@@ -13,8 +13,6 @@ import re
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-import pyautogui
-import time
 import os.path
 import pickle
 
@@ -57,26 +55,18 @@ def create_spotify_credentials():
     webbrowser.open(video_url)
 
 
-def get_google_description(query):
-    search_url = f"https://www.google.com/search?q={query}"
+def get_wikipedia_summary(query):
+    wikipedia_api_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{query}"
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
-    }
+    response = requests.get(wikipedia_api_url)
 
-    response = requests.get(search_url, headers=headers)
+    if response.status_code != 200:
+        return "Failed to fetch data."
 
-    soup = BeautifulSoup(response.text, 'html.parser')
+    data = response.json()
 
-    description_header = soup.find('h3', class_='bNg8Rb OhScic zsYMMe BBwThe', string='Description')
-    if description_header:
+    return data.get("extract", "Description not found.")
 
-        description_span = description_header.find_next('span')
-
-        if description_span:
-            return description_span.get_text()
-
-    return "Description not found."
 
 
 def get_query(query, excluded_words):
@@ -95,29 +85,6 @@ def get_google_query(query):
     words = [word for word in words if not pattern.search(word)]
     query = ' '.join(words)
     return query
-
-
-SCOPES = ['https://www.googleapis.com/auth/calendar']
-
-
-def authenticate_google():
-    creds = None
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-
-    return creds
-
 
 def say(text, lang='en'):
     tts = gTTS(text=text, lang=lang)
